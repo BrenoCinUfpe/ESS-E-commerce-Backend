@@ -1,0 +1,41 @@
+Feature: Mostrar Estatísticas de pedidos no mês
+
+    Como administrador do sistema,
+    Eu quero visualizar estatísticas de pedidos no mês,
+    Para que eu possa monitorar o desempenho e fazer análises estratégicas.
+
+
+Scenario: Exibir estatísticas de pedidos do mês atual
+    Given O usuário do tipo "Administrador" de id “123” está logado no sistema
+    Given O mês atual é fevereiro de 2024
+    And a quantidade arrecadada no mês atual é “14.260,00”
+    And quantidade de pedidos no mês atual é “248”
+    And o preço médio dos pedidos no mês atual é “57,5”
+    When acessa a página de estatísticas de pedidos
+    Then deve ser exibida a quantidade total arrecadada no mês atual “14.260,00”, quantidade de pedidos no mês atual “248” e preço médio dos pedidos no mês atual “57,5”
+
+Scenario: Exibir estatísticas de mês sem pedidos
+    Given O usuário do tipo "Administrador" de id “123” está logado no sistema
+    And O mês atual é fevereiro de 2024
+    And quantidade de pedidos no mês atual é “0”
+    When acessa a página de estatísticas de pedidos
+    Then deve ser exibida a mensagem “não há pedidos no mês atual”
+
+Scenario: Mudar seleção de mês e ano e atualizar estatísticas
+    Given O usuário do tipo "Administrador" de id “123” está logado no sistema
+    Given O mês atual é “fevereiro” do ano “2024”
+    And a quantidade arrecadada pelo usuário de id “123” no mês atual é “14.260,00”
+    And quantidade de pedidos pelo usuário de id “123” no mês atual é “248”
+    And o preço médio dos pedidos no mês atual é “57,5”
+    Given a quantidade arrecadada pelo usuário de id “123” no mês “janeiro” e ano “2024” é “8.556,00” e quantidade de pedidos pelo usuário de id “123” no mês “janeiro” e ano “2024” é “155” e o preço médio dos pedidos no mês “janeiro” e ano “2024” é “55,20”
+    When acessa a página de estatísticas de pedidos
+    Then deve ser exibida a quantidade total arrecadada no mês atual “14.260,00”, quantidade de pedidos no mês atual “248” e preço médio dos pedidos no mês atual “57,5”
+    When seleciona o mês "Janeiro" e o ano "2024"
+    Then deve ser exibida a quantidade total arrecadada no mês “8.556,00”, quantidade de pedidos no mês atual “155” e preço médio dos pedidos no mês atual “55,20”
+
+Scenario: Selecionar um mês e ano sem pedidos
+    Given O usuário do tipo "Administrador" de id “123” está logado no sistema
+    Given O mês atual é “fevereiro” do ano “2024”
+    And quantidade de pedidos pelo usuário de id “123” no mês atual é “0”
+    When acessa a página de estatísticas de pedidos
+    Then deve ser exibida a mensagem “não há pedidos no mês selecionado”
