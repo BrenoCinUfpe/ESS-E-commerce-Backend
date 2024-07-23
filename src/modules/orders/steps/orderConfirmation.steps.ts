@@ -1,6 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
+import {
+  PrismaClientInitializationError,
+  PrismaClientKnownRequestError,
+} from '@prisma/client/runtime/library';
 import { defineFeature, loadFeature } from 'jest-cucumber';
+import { PrismaModule } from 'src/database/prisma/prisma.module';
 
 import { PrismaService } from '../../../database/prisma/prisma.service';
 import { EmailService } from '../../email/email.service';
@@ -159,7 +164,7 @@ defineFeature(feature, test => {
         code: 'order123',
         price: 100.0,
         userId: '1',
-        deliveryAddressId: 'PROCESSING',
+        deliveryAddressId: 'DELIVERED',
         estimatedDelivery: new Date(),
       };
     });
@@ -179,5 +184,44 @@ defineFeature(feature, test => {
         expect(error.message).toBe('Falha ao cancelar');
       },
     );
+  });
+
+  //Cancelamento 2
+  test('cancelamento de pedido', ({ given, when, then }) => {
+    given('cliente "test@example.com"', async () => {
+      const user = await prismaService.user.create({
+        data: {
+          email: 'test@example.com',
+          name: 'Test User',
+          password: 'password',
+          role: 'CUSTOMER',
+        },
+      });
+
+      orderData = {
+        email: 'test@example.com',
+        code: 'order123',
+        price: 100.0,
+        userId: '1',
+        deliveryAddressId: 'PROCESSING',
+        estimatedDelivery: new Date(),
+      };
+    });
+
+    when('cancelamento é solicitado', async () => {
+      try {
+        await ordersService.cancelOrder(orderData.userId);
+      } catch (err) {
+        error = err;
+      }
+    });
+
+    then('a mensagem "Cancelamento realizado com sucesso"', () => {
+      expect(prismaService.order.update).toHaveBeenCalledWith(
+        expect.stringContaining('Cancelamento realizado com sucesso'),
+        'id',
+        'test@example.com',
+      );
+    });
   });
 });

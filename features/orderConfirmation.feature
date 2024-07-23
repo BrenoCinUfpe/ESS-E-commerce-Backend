@@ -11,9 +11,13 @@ Feature: Confirmação de Pedido
     When o pedido é processado
     Then uma exceção deve ser lançada com a mensagem "Falha ao enviar o email"
 
-   Scenario: cancelamento de pedido negado
+  Scenario: cancelamento de pedido negado
     Given cliente "test@example.com" e ID "1"
     When cancelamento solicitado
     Then uma exceção deve ser lançada com a mensagem "Falha ao cancelar"
 
+  Scenario: cancelamento de pedido 
+    Given cliente "test@example.com" e ID "1"
+    When cancelamento solicitado
+    Then a mensagem "Cancelamento realizado com sucesso"
   
