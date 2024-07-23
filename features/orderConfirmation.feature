@@ -12,12 +12,12 @@ Feature: Confirmação de Pedido
     Then uma exceção deve ser lançada com a mensagem "Falha ao enviar o email"
 
   Scenario: cancelamento de pedido negado
-    Given cliente "test@example.com" e ID "1"
+    Given cliente "test@example.com"
     When cancelamento solicitado
     Then uma exceção deve ser lançada com a mensagem "Falha ao cancelar"
 
   Scenario: cancelamento de pedido 
-    Given cliente "test@example.com" e ID "1"
+    Given cliente "test@example.com"
     When cancelamento solicitado
     Then a mensagem "Cancelamento realizado com sucesso"
   

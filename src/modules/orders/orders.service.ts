@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { OrderStatus } from '@prisma/client';
 
 import { PrismaService } from '../../database/prisma/prisma.service';
@@ -16,7 +21,9 @@ export class OrdersService {
 
     const order = await this.prisma.order.create({
       data: {
-        userId: userId,
+        user: {
+          connect: { id: userId },
+        },
         code: code,
         price: price,
         estimatedDelivery: estimatedDelivery,
@@ -38,6 +45,18 @@ export class OrdersService {
   async cancelOrder(id: number) {
     if (!id) {
       throw new BadRequestException('Id não enviado');
+    }
+
+    const order = await this.prisma.order.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (order === null) {
+      throw new NotFoundException();
+    }
+    if (order.status === OrderStatus.CONCLUDED) {
+      throw new ConflictException();
     }
 
     await this.prisma.order.update({

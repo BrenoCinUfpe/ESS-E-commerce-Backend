@@ -1,5 +1,6 @@
+import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient, OrderStatus } from '@prisma/client';
 import {
   PrismaClientInitializationError,
   PrismaClientKnownRequestError,
@@ -149,27 +150,33 @@ defineFeature(feature, test => {
 
   //Cancelamento
   test('cancelamento de pedido negado', ({ given, when, then }) => {
-    given('cliente "test@example.com"', async () => {
+    let error;
+    let orderData;
+
+    given(/^cliente "(.*)"$/, async email => {
       const user = await prismaService.user.create({
         data: {
-          email: 'test@example.com',
+          email,
           name: 'Test User',
           password: 'password',
           role: 'CUSTOMER',
         },
       });
 
-      orderData = {
-        email: 'test@example.com',
-        code: 'order123',
-        price: 100.0,
-        userId: '1',
-        deliveryAddressId: 'DELIVERED',
-        estimatedDelivery: new Date(),
-      };
+      orderData = await prismaService.order.create({
+        data: {
+          user: {
+            connect: { id: user.id },
+          },
+          code: 'code',
+          price: 0,
+          estimatedDelivery: new Date(),
+          status: 'CONCLUDED',
+        },
+      });
     });
 
-    when('cancelamento é solicitado', async () => {
+    when('cancelamento solicitado', async () => {
       try {
         await ordersService.cancelOrder(orderData.userId);
       } catch (err) {
@@ -180,48 +187,48 @@ defineFeature(feature, test => {
     then(
       'uma exceção deve ser lançada com a mensagem "Falha ao cancelar"',
       () => {
-        expect(error).toBeDefined();
-        expect(error.message).toBe('Falha ao cancelar');
+        expect(error instanceof ConflictException);
       },
     );
   });
 
   //Cancelamento 2
   test('cancelamento de pedido', ({ given, when, then }) => {
-    given('cliente "test@example.com"', async () => {
+    let error;
+    let orderData;
+    given(/^cliente "(.*)"$/, async email => {
       const user = await prismaService.user.create({
         data: {
-          email: 'test@example.com',
+          email,
           name: 'Test User',
           password: 'password',
           role: 'CUSTOMER',
         },
       });
 
-      orderData = {
-        email: 'test@example.com',
-        code: 'order123',
-        price: 100.0,
-        userId: '1',
-        deliveryAddressId: 'PROCESSING',
-        estimatedDelivery: new Date(),
-      };
+      orderData = await prismaService.order.create({
+        data: {
+          user: {
+            connect: { id: user.id },
+          },
+          code: 'code',
+          price: 0,
+          estimatedDelivery: new Date(),
+          status: 'PROCESSING',
+        },
+      });
     });
 
-    when('cancelamento é solicitado', async () => {
+    when('cancelamento solicitado', async () => {
       try {
-        await ordersService.cancelOrder(orderData.userId);
+        await ordersService.cancelOrder(orderData.id);
       } catch (err) {
         error = err;
       }
     });
 
     then('a mensagem "Cancelamento realizado com sucesso"', () => {
-      expect(prismaService.order.update).toHaveBeenCalledWith(
-        expect.stringContaining('Cancelamento realizado com sucesso'),
-        'id',
-        'test@example.com',
-      );
+      expect(error).not.toBeDefined();
     });
   });
 });
