@@ -141,4 +141,43 @@ defineFeature(feature, test => {
       },
     );
   });
+
+  //Cancelamento
+  test('cancelamento de pedido negado', ({ given, when, then }) => {
+    given('cliente "test@example.com"', async () => {
+      const user = await prismaService.user.create({
+        data: {
+          email: 'test@example.com',
+          name: 'Test User',
+          password: 'password',
+          role: 'CUSTOMER',
+        },
+      });
+
+      orderData = {
+        email: 'test@example.com',
+        code: 'order123',
+        price: 100.0,
+        userId: '1',
+        deliveryAddressId: 'PROCESSING',
+        estimatedDelivery: new Date(),
+      };
+    });
+
+    when('cancelamento é solicitado', async () => {
+      try {
+        await ordersService.cancelOrder(orderData.userId);
+      } catch (err) {
+        error = err;
+      }
+    });
+
+    then(
+      'uma exceção deve ser lançada com a mensagem "Falha ao cancelar"',
+      () => {
+        expect(error).toBeDefined();
+        expect(error.message).toBe('Falha ao cancelar');
+      },
+    );
+  });
 });
